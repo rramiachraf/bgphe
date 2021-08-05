@@ -9,6 +9,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/chromedp"
+	"github.com/pterm/pterm"
 )
 
 func main() {
@@ -51,6 +52,8 @@ func main() {
 		}
 	}
 
+	table := pterm.TableData{{"ASN/IP", "Organization", "Location"}}
+
 	document.Find(".w100p > tbody").Children().Each(func(i int, s *goquery.Selection) {
 		el := s.Children()
 
@@ -58,11 +61,13 @@ func main() {
 		Org := el.Last().Text()
 		Location, _ := el.Find("img").Attr("alt")
 
-		str := fmt.Sprintf("[%s] %s [%s]\n", ASN, Org, Location)
+		str := fmt.Sprintf("%s | %s [%s]\n", ASN, Org, Location)
 
 		if i != 0 {
-			fmt.Print(str)
+			table = append(table, []string{ASN, Org, Location})
 			f.Write([]byte(str))
 		}
 	})
+
+	pterm.DefaultTable.WithHasHeader().WithData(table).Render()
 }
