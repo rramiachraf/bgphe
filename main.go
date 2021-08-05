@@ -37,6 +37,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println("[ERR]" + err.Error())
+		return
 	}
 
 	document, _ := goquery.NewDocumentFromReader(strings.NewReader(page))
