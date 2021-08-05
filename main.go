@@ -32,7 +32,7 @@ func main() {
 	err := chromedp.Run(
 		ctx,
 		chromedp.Navigate(url),
-		chromedp.WaitVisible(".w100p > tbody"),
+		chromedp.WaitVisible(".w100p > tbody,#resourceerror"),
 		chromedp.InnerHTML("html", &page),
 	)
 
@@ -55,6 +55,13 @@ func main() {
 	}
 
 	table := pterm.TableData{{"ASN/IP", "Prefixes", "Organization", "Location"}}
+
+	bgperr := document.Find("#resourceerror").Text()
+
+	if bgperr != "" {
+		fmt.Println("[ERR]", "You have reached your query limit on bgp.he.net.")
+		return
+	}
 
 	document.Find(".w100p > tbody").Children().Each(func(i int, s *goquery.Selection) {
 		el := s.Children()
