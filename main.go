@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -53,7 +54,7 @@ func main() {
 		}
 	}
 
-	table := pterm.TableData{{"ASN/IP", "Organization", "Location"}}
+	table := pterm.TableData{{"ASN/IP", "Prefixes", "Organization", "Location"}}
 
 	document.Find(".w100p > tbody").Children().Each(func(i int, s *goquery.Selection) {
 		el := s.Children()
@@ -61,11 +62,34 @@ func main() {
 		ASN := el.Find("a").Text()
 		Org := el.Last().Text()
 		Location, _ := el.Find("img").Attr("alt")
+		var Prefixes string
 
-		str := fmt.Sprintf("%s | %s [%s]\n", ASN, Org, Location)
+		params, urlExists := s.Find("a").Attr("href")
+		url = fmt.Sprintf("https://bgp.he.net%s", params)
+		exp := `Prefixes Originated \(all\): (\d+)`
+		var body string
+
+		if strings.HasPrefix(ASN, "AS") && urlExists {
+			chromedp.Run(
+				ctx,
+				chromedp.Navigate(url),
+				chromedp.WaitReady("body"),
+				chromedp.InnerHTML("body", &body),
+			)
+
+			rgx, _ := regexp.Compile(exp)
+			matches := rgx.FindStringSubmatch(body)
+			Prefixes = string(matches[1])
+		}
+
+		str := fmt.Sprintf("%s (%s) | %s [%s]\n", ASN, Prefixes, Org, Location)
+
+		if Prefixes == "" {
+			str = fmt.Sprintf("%s | %s [%s]\n", ASN, Org, Location)
+		}
 
 		if i != 0 {
-			table = append(table, []string{ASN, Org, Location})
+			table = append(table, []string{ASN, Prefixes, Org, Location})
 			f.Write([]byte(str))
 		}
 	})
