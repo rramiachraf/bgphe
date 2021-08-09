@@ -3,7 +3,7 @@ Search through bgp.he.net from the command line.
 
 ## Installation
 ```
-go get github.com/rramiachraf/bgphe -u
+go get github.com/rramiachraf/bgphe
 ```
 
 ## Usage
